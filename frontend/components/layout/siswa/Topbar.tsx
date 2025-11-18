@@ -6,7 +6,7 @@ export function TopbarSiswa() {
         <div className="w-full h-[93px] flex items-center justify-between px-8 bg-white border-b border-gray-100 flex-shrink-0">
             {/* KIRI — Judul */}
             <div className="flex flex-col leading-tight">
-                <h1 className="text-xl font-semibold text-gray-800">Simnas</h1>
+                <h1 className="text-xl font-semibold text-gray-800">SIMNAS</h1>
                 <p className="text-sm text-gray-500 -mt-0.5">Sistem Pelaporan Magang Siswa SIMNAS</p>
             </div>
             {/* KANAN — Profil */}

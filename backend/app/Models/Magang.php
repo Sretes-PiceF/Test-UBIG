@@ -9,6 +9,8 @@ class Magang extends Model
 {
     use HasFactory;
 
+    protected $table = 'magang';
+    public $timestamps = true;
     protected $fillable = [
         'siswa_id',
         'dudi_id',

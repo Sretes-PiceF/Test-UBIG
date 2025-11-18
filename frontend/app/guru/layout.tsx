@@ -1,25 +1,23 @@
-// app/guru/layout.tsx
+// app/siswa/layout.tsx
 import { AppSidebarGuru } from "@/components/layout/guru/App-sidebar";
-import { TopbarGuru } from "@/components/layout/guru/Topbar"; // Import TopbarGuru
+import { TopbarGuru } from "@/components/layout/guru/Topbar";
 
 // Lebar Sidebar adalah w-72 (tailwind class)
-const MAIN_CONTENT_MARGIN_CLASS = "ml-72"; // Margin harus sama dengan lebar sidebar
+const MAIN_CONTENT_MARGIN_CLASS = "ml-71"; // Margin harus sama dengan lebar sidebar
 
 export default function GuruLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex min-h-screen bg-gray-50">
-
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
             {/* 1. SIDEBAR (Fixed) */}
             <AppSidebarGuru />
 
             {/* 2. KONTEN UTAMA */}
             <div className={`flex-1 flex flex-col ${MAIN_CONTENT_MARGIN_CLASS}`}>
-
                 {/* TOPBAR */}
                 <TopbarGuru />
 
-                {/* KONTEN UTAMA */}
-                <main className="flex-1 pb-8">
+                {/* KONTEN UTAMA - Scrollable */}
+                <main className="flex-1 overflow-y-auto">
                     {children}
                 </main>
             </div>

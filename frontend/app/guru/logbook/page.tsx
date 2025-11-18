@@ -1,4 +1,4 @@
-// app/guru/logbook/page.tsx (atau lokasi yang sesuai)
+// app/guru/logbook/page.tsx
 
 import { CardStats } from "@/components/ui/CardStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,8 @@ import {
     BookOpen,
     User,
     Calendar,
-    MoreHorizontal, // Untuk tombol titik tiga (Aksi)
-    Clock, // Mengganti ClockFading
+    MoreHorizontal,
+    Clock,
 } from "lucide-react";
 
 // Tipe data untuk entri Logbook
@@ -71,7 +71,7 @@ export default function LogBookPage() {
 
             {/* 1. HEADER HALAMAN */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Manajamen LogBook Magang</h1>
+                <h1 className="text-3xl font-bold text-gray-800">Manajemen Logbook Magang</h1>
                 <p className="text-gray-600 mt-1">
                     Kelola dan verifikasi laporan harian kegiatan siswa magang <span className="font-semibold">SIMNAS</span>
                 </p>
@@ -79,10 +79,9 @@ export default function LogBookPage() {
 
             {/* 2. GRID CARDS STATS */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
-
                 <CardStats
                     title="Total Logbook"
-                    value={350} // Data dummy
+                    value={350}
                     description="Keseluruhan catatan harian"
                     icon={BookOpen}
                 />
@@ -91,34 +90,37 @@ export default function LogBookPage() {
                     title="Belum Diverifikasi"
                     value={45}
                     description="Menunggu persetujuan Guru/DUDI"
-                    icon={Clock} // Menggunakan ikon Clock
+                    icon={Clock}
                 />
 
                 <CardStats
                     title="Disetujui"
-                    value={280} // Data dummy
+                    value={280}
                     description="Telah disetujui Guru & DUDI"
                     icon={ThumbsUp}
                 />
 
                 <CardStats
                     title="Ditolak"
-                    value={25} // Data dummy
+                    value={25}
                     description="Perlu revisi siswa"
                     icon={ThumbsDown}
                 />
             </div>
 
             {/* 3. CARD TABEL LOGBOOK */}
-            <Card className="shadow-lg rounded-xl">
-                <CardHeader className="py-4 px-6 border-b flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center text-xl font-semibold text-gray-900">
-                        <BookOpen className="h-5 w-5 mr-2 text-cyan-600" /> Daftar Logbook Harian
-                    </CardTitle>
+            <Card className="shadow-sm rounded-lg border-0">
+                <CardHeader className="py-4 px-6 border-b border-gray-200">
+                    <div className="flex flex-row items-center justify-between">
+                        <CardTitle className="flex items-center text-xl font-semibold text-gray-900">
+                            <BookOpen className="h-5 w-5 mr-2 text-cyan-600" />
+                            Daftar Logbook Harian
+                        </CardTitle>
+                    </div>
                 </CardHeader>
 
                 <CardContent className="p-6">
-                    {/* BARIS PENCARIAN & FILTER (Sesuai image_613908.png) */}
+                    {/* BARIS PENCARIAN & FILTER */}
                     <div className="flex items-center justify-between mb-6 space-x-4">
 
                         {/* Search Input */}
@@ -192,7 +194,10 @@ export default function LogBookPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-gray-900">{entry.name}</p>
-                                                    <p className="text-xs text-gray-500 mt-1"><Calendar className="inline h-3 w-3 mr-1" />{entry.date}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        <Calendar className="inline h-3 w-3 mr-1" />
+                                                        {entry.date}
+                                                    </p>
                                                     {entry.photo && (
                                                         <p className="text-xs text-[#0097BB] mt-1 italic">
                                                             Ada foto
@@ -235,7 +240,6 @@ export default function LogBookPage() {
                                             </div>
                                         </td>
 
-
                                         {/* Kolom Aksi (Titik Tiga) */}
                                         <td className="px-3 py-4 align-top whitespace-nowrap text-left text-sm font-medium">
                                             <button className="text-gray-400 hover:text-[#0097BB] transition-colors p-1 rounded-md">
@@ -247,20 +251,27 @@ export default function LogBookPage() {
                             </tbody>
                         </table>
 
-                        {/* Bagian Footer Pagination (Sederhana) */}
-                        <div className="flex justify-between items-center pt-4 border-t mt-4 text-sm text-gray-600">
+                        {/* Bagian Footer Pagination */}
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-4 text-sm text-gray-600">
                             <span>Menampilkan 1 sampai {logbookData.length} dari {logbookData.length} entri</span>
                             <div className="flex space-x-1">
-                                <button className="p-2 border rounded-lg hover:bg-gray-100"> &lt; </button>
-                                <button className="p-2 border rounded-lg bg-[#0097BB] text-white"> 1 </button>
-                                <button className="p-2 border rounded-lg hover:bg-gray-100"> 2 </button>
-                                <button className="p-2 border rounded-lg hover:bg-gray-100"> &gt; </button>
+                                <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                                    &lt;
+                                </button>
+                                <button className="p-2 border border-gray-200 rounded-lg bg-[#0097BB] text-white">
+                                    1
+                                </button>
+                                <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                                    2
+                                </button>
+                                <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                                    &gt;
+                                </button>
                             </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
-
         </div>
     );
 }

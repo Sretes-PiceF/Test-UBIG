@@ -9,7 +9,7 @@ class Siswa extends Model
 {
     use HasFactory;
     protected $table = 'siswa';
-
+    public $timestamps = true;
     protected $fillable = [
         'user_id',
         'nama',

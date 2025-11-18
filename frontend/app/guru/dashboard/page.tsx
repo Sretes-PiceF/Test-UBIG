@@ -1,53 +1,112 @@
-// app/guru/dashboard/DashboardPage.tsx
+'use client';
 
 import { DudiCard } from "@/components/layout/guru/DudiCard";
 import { LogbookCard } from "@/components/layout/guru/LogbookCard";
 import { MagangCard } from "@/components/layout/guru/MagangCard";
 import { ProgressCard } from "@/components/layout/guru/Progres";
 import { CardStats } from "@/components/ui/CardStats";
+import { dashboardAPI } from "@/lib/api";
+import { DashboardData } from "@/types/dashboard";
 import {
     User, Building2, GraduationCap, BookOpen
-
 } from "lucide-react";
-// Pastikan Anda mengimpor Card dan Ikon dari lokasi yang benar
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await dashboardAPI.getDashboardData();
+
+            if (response.success && response.data) {
+                setDashboardData(response.data);
+            }
+        } catch (err: unknown) {
+
+            if (isAxiosError(err)) {
+                const serverMessage =
+                    err.response?.data?.error ||
+                    err.response?.data?.message;
+
+                const errorMessage =
+                    serverMessage ||
+                    err.message ||
+                    "Gagal memuat data dashboard";
+
+                setError(`Error ${err.response?.status || 'Unknown'}: ${errorMessage}`);
+                console.error("API Error Details:", err.response?.data || err);
+            } else {
+                // error lain (bukan axios)
+                setError("Terjadi kesalahan tak terduga");
+                console.error("Unknown Error:", err);
+            }
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-xl">Memuat data...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-xl text-red-500">{error}</div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-8">
             {/* Header Dashboard tetap ada di sini */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
                 <p className="text-gray-600 mt-1">
-                    Selamat datang di dashboard admin <span className="font-semibold">SIMNAS</span>
+                    Selamat datang di dashboard guru <span className="font-semibold">SIMNAS</span>
                 </p>
             </div>
-            {/* GRID CARDS */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 
+            {/* GRID CARDS - DIPERBAIKI */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <CardStats
                     title="Total Siswa"
-                    value={150}
+                    value={dashboardData?.total_siswa || 0}
                     description="Seluruh siswa terdaftar"
                     icon={User}
                 />
 
                 <CardStats
                     title="DUDI Partner"
-                    value={45}
+                    value={dashboardData?.total_dudi || 0}
                     description="Perusahaan mitra"
                     icon={Building2}
                 />
 
                 <CardStats
                     title="Siswa Magang"
-                    value={120}
+                    value={dashboardData?.siswa_magang || 0}
                     description="Sedang aktif magang"
                     icon={GraduationCap}
                 />
 
                 <CardStats
                     title="Logbook Hari Ini"
-                    value={85}
+                    value={dashboardData?.logbook_hari_ini || 0}
                     description="Laporan masuk hari ini"
                     icon={BookOpen}
                 />
@@ -66,7 +125,6 @@ export default function DashboardPage() {
                     <DudiCard />
                 </div>
             </div>
-
         </div>
     );
 }

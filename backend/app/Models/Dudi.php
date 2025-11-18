@@ -10,7 +10,7 @@ class Dudi extends Model
     use HasFactory;
 
     protected $table = 'dudi';
-
+    public $timestamps = true;
     protected $fillable = [
         'user_id',
         'nama_perusahaan',

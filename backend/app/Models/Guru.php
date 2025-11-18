@@ -9,7 +9,7 @@ class Guru extends Model
 {
       use HasFactory;
     protected $table = 'guru';
-
+    public $timestamps = true;
     protected $fillable = [
         'user_id',
         'nip',

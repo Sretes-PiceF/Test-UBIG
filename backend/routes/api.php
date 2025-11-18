@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DudiGuruController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Middleware\GuruMiddleware;
@@ -15,6 +16,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::post('/register/siswa', [AuthController::class, 'registerSiswa']);
 Route::post('/register/guru', [AuthController::class, 'registerGuru']);
 Route::post('/login', [AuthController::class, 'login']);
+
+    Route::get('/dashboard', [DashboardController::class, 'getDashboardData']);
 
 // Protected routes - butuh authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -34,11 +37,11 @@ Route::middleware('auth:sanctum')->group(function (){
     Route::middleware(GuruMiddleware::class)->group(function (){
 
         //Route DASHBOARD
-        Route::get();
-        Route::get();
-        Route::post();
-        Route::patch();
-        Route::delete();
+        // Route::get();
+        // Route::get();
+        // Route::post();
+        // Route::patch();
+        // Route::delete();
 
         //Route DUDI
         Route::get('/guru/dudi', [DudiGuruController::class, 'getAllDudi']);
@@ -50,19 +53,19 @@ Route::middleware('auth:sanctum')->group(function (){
 
 
         //Route MAGANG
-        Route::get();
-        Route::get();
-        Route::post();
-        Route::patch();
-        Route::delete();
+        // Route::get();
+        // Route::get();
+        // Route::post();
+        // Route::patch();
+        // Route::delete();
 
 
         //Route LOGBOOK
-        Route::get();
-        Route::get();
-        Route::post();
-        Route::patch();
-        Route::delete();
+        // Route::get();
+        // Route::get();
+        // Route::post();
+        // Route::patch();
+        // Route::delete();
 
     });
 });
