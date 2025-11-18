@@ -8,7 +8,7 @@ export function TopbarGuru() {
             {/* BAGIAN KIRI — Title */}
             <div>
                 <h1 className="text-lg font-semibold text-gray-800">SIMNAS</h1>
-                <p className="text-xs text-gray-500 -mt-1">Sistem Informasi Magang Nasional</p>
+                <p className="text-xs text-gray-500 -mt-1">Sistem Pelaporan Magang Siswa SIMNAS</p>
             </div>
 
             {/* BAGIAN KANAN — Profil */}

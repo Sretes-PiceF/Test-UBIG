@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Magang;
-use App\Http\Requests\StoreMagangRequest;
-use App\Http\Requests\UpdateMagangRequest;
+use App\Models\Logbook;
+use App\Http\Requests\StoreLogbookRequest;
+use App\Http\Requests\UpdateLogbookRequest;
 
-class MagangController extends Controller
+class LogbookAdminController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class MagangController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMagangRequest $request)
+    public function store(StoreLogbookRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class MagangController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Magang $magang)
+    public function show(Logbook $logbook)
     {
         //
     }
@@ -43,7 +43,7 @@ class MagangController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Magang $magang)
+    public function edit(Logbook $logbook)
     {
         //
     }
@@ -51,7 +51,7 @@ class MagangController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateMagangRequest $request, Magang $magang)
+    public function update(UpdateLogbookRequest $request, Logbook $logbook)
     {
         //
     }
@@ -59,7 +59,7 @@ class MagangController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Magang $magang)
+    public function destroy(Logbook $logbook)
     {
         //
     }

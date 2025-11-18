@@ -1,6 +1,5 @@
-// AppSidebarGuru.tsx (Perbaikan untuk Fixed Position)
+// AppSidebarGuru.tsx
 "use client";
-
 import {
     GraduationCap,
     Building2,
@@ -35,35 +34,51 @@ const navigationItems = [
     },
 ];
 
+// Inline style untuk rounded corners
+const roundedStyle = {
+    borderRadius: "0.75rem" // rounded-xl
+};
+
+const roundedFullStyle = {
+    borderRadius: "9999px" // rounded-full
+};
+
 export function AppSidebarGuru() {
     return (
         <div className="flex h-screen w-72 flex-col bg-white border-r border-gray-100 shadow-sm fixed top-0 left-0 z-10">
-
-            {/* Header (Tetap Statis) */}
+            {/* Header */}
             <div className="p-6 border-b border-gray-100 shrink-0">
-                {/* ... konten header tetap sama ... */}
                 <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-xl bg-[#0097BB] flex items-center justify-center">
-                        <GraduationCap className="h-6 w-6 text-[white]" />
+                    {/* Logo dengan inline style */}
+                    <div
+                        className="h-10 w-10 bg-[#4FC3F7] flex items-center justify-center shadow-sm hover:scale-105 transition-transform cursor-pointer"
+                        style={roundedStyle} // <- Terapkan rounded-xl
+                    >
+                        <GraduationCap className="h-5 w-5 text-white" />
                     </div>
                     <div>
                         <h1 className="text-lg font-semibold text-gray-900">Magang</h1>
-                        <p className="text-xs text-gray-500 -mt-0.5">Management</p>
+                        <p className="text-xs text-gray-500 -mt-0.5">Portal Guru</p>
                     </div>
                 </div>
             </div>
 
-            {/* NAVIGATION (Dapat Scroll) */}
-            {/* flex-1 dan overflow-y-auto memungkinkan bagian ini yang scroll */}
-            <div className="flex-1 overflow-y-auto py-6">
+            {/* Navigation */}
+            <div className="flex-1 overflow-y-auto py-2 px-3">
                 <SidebarNav items={navigationItems} />
             </div>
 
-            {/* FOOTER (Tetap Statis) */}
+            {/* Footer */}
             <div className="p-4 border-t border-gray-100 shrink-0">
-                {/* ... konten footer tetap sama ... */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-800">
+                <div
+                    className="flex items-center gap-3 p-3 bg-gray-50"
+                    style={roundedStyle} // <- Terapkan rounded-xl ke container footer
+                >
+                    {/* Avatar di footer dengan inline style rounded-full */}
+                    <div
+                        className="h-8 w-8 bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-800"
+                        style={roundedFullStyle} // <- Terapkan rounded-full
+                    >
                         N
                     </div>
                     <div>

@@ -1,3 +1,4 @@
+// Sidebar-nav.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -15,7 +16,7 @@ export function SidebarNav({ items }: SidebarNavProps) {
     const currentPath = normalizePath(rawPath);
 
     return (
-        <nav className="space-y-1 px-6">
+        <nav className="space-y-1 px-3"> {/* <- Kurangi padding agar lebih rapat */}
             {items.map((item, index) => {
                 if (item.isSection) {
                     return (

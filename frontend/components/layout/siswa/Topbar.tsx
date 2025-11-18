@@ -1,23 +1,20 @@
 "use client";
-
 import { User } from "lucide-react";
 
 export function TopbarSiswa() {
     return (
-        <div className="w-full h-[93px] flex items-center justify-between px-6 bg-white border-b border-gray-100 sticky top-0 z-50">
-            {/* BAGIAN KIRI — Title */}
-            <div>
-                <h1 className="text-lg font-semibold text-gray-800">SIMNAS</h1>
-                <p className="text-xs text-gray-500 -mt-1">Sistem Informasi Magang Siswa</p>
+        <div className="w-full h-[93px] flex items-center justify-between px-8 bg-white border-b border-gray-100 flex-shrink-0">
+            {/* KIRI — Judul */}
+            <div className="flex flex-col leading-tight">
+                <h1 className="text-xl font-semibold text-gray-800">Simnas</h1>
+                <p className="text-sm text-gray-500 -mt-0.5">Sistem Pelaporan Magang Siswa SIMNAS</p>
             </div>
-
-            {/* BAGIAN KANAN — Profil */}
+            {/* KANAN — Profil */}
             <div className="flex items-center gap-3">
-                <div className="text-right">
-                    <p className="font-medium text-sm text-gray-800">Siswa</p>
-                    <p className="text-xs text-gray-500 -mt-1">Atas Nama</p>
+                <div className="text-right leading-tight">
+                    <p className="font-semibold text-sm text-gray-800">Nama Siswa</p>
+                    <p className="text-xs text-gray-500 -mt-0.5">Siswa PKL</p>
                 </div>
-
                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                     <User className="h-5 w-5 text-gray-600" />
                 </div>

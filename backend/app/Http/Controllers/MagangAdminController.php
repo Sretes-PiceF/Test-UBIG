@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Dudi;
-use App\Http\Requests\StoreDudiRequest;
-use App\Http\Requests\UpdateDudiRequest;
+use App\Models\Magang;
+use App\Http\Requests\StoreMagangRequest;
+use App\Http\Requests\UpdateMagangRequest;
 
-class DudiController extends Controller
+class MagangAdminController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class DudiController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreDudiRequest $request)
+    public function store(StoreMagangRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class DudiController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Dudi $dudi)
+    public function show(Magang $magang)
     {
         //
     }
@@ -43,7 +43,7 @@ class DudiController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Dudi $dudi)
+    public function edit(Magang $magang)
     {
         //
     }
@@ -51,7 +51,7 @@ class DudiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateDudiRequest $request, Dudi $dudi)
+    public function update(UpdateMagangRequest $request, Magang $magang)
     {
         //
     }
@@ -59,7 +59,7 @@ class DudiController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Dudi $dudi)
+    public function destroy(Magang $magang)
     {
         //
     }
