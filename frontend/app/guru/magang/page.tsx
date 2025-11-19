@@ -1,9 +1,10 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Calendar1,
     CheckCircle,
-    GraduationCap,
     Plus,
     User,
     UsersRound,
@@ -11,15 +12,68 @@ import {
 } from "lucide-react";
 import { MagangTable } from "@/components/layout/guru/MagangTable";
 import { CardStats } from "@/components/ui/CardStats";
+import { useState, useEffect } from "react";
+import { MagangDashboardData } from "@/types/dashboard";
+import { TambahMagangModal } from "@/components/layout/guru/create/TambahMagangModal";
 
 export default function MagangPage() {
-    // Data statis atau nanti dari API
-    const statsData = {
-        totalSiswa: "156",
-        totalDudi: "42",
-        siswaMagang: "118",
-        logbookHariIni: "23"
+    const [statsData, setStatsData] = useState<MagangDashboardData>({
+        total_siswa: 0,
+        aktif: 0,
+        selesai: 0,
+        pending: 0
+    });
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchMagangStats = async () => {
+        try {
+            setLoading(true);
+
+            // Sesuaikan dengan route backend untuk data magang
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/guru/magang`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('Magang Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const text = await response.text();
+            console.log('Magang Raw response:', text);
+
+            // Coba parse JSON hanya jika text tidak kosong
+            if (text) {
+                const result = JSON.parse(text);
+
+                if (result.success) {
+                    setStatsData(result.data);
+                } else {
+                    console.error('Magang API returned error:', result.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error fetching Magang stats:', error);
+            // Tetap gunakan default values (0) jika error
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchMagangStats();
+    }, []);
+
+    const handleSuccessAdd = () => {
+        fetchMagangStats();
+    }
 
     return (
         <div className="p-8">
@@ -35,29 +89,29 @@ export default function MagangPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
                 <CardStats
                     title="Total Siswa"
-                    value={statsData.totalSiswa}
-                    description="Seluruh siswa terdaftar"
+                    value={loading ? "..." : statsData.total_siswa}
+                    description="Siswa magang terdaftar"
                     icon={User}
                 />
 
                 <CardStats
                     title="Aktif"
-                    value={statsData.totalDudi}
-                    description="Perusahaan mitra"
-                    icon={Building2} // Icon lebih sesuai untuk perus
+                    value={loading ? "..." : statsData.aktif}
+                    description="Sedang magang"
+                    icon={Building2}
                 />
 
                 <CardStats
                     title="Selesai"
-                    value={statsData.siswaMagang}
-                    description="Sedang aktif magang"
+                    value={loading ? "..." : statsData.selesai}
+                    description="Magang selesai"
                     icon={CheckCircle}
                 />
 
                 <CardStats
                     title="Pending"
-                    value={statsData.logbookHariIni}
-                    description="Laporan masuk hari ini"
+                    value={loading ? "..." : statsData.pending}
+                    description="Menunggu penempatan"
                     icon={Calendar1}
                 />
             </div>
@@ -73,6 +127,7 @@ export default function MagangPage() {
 
                         {/* TOMBOL TAMBAH SISWA */}
                         <Button
+                            onClick={() => setIsModalOpen(true)}
                             className="bg-[#0097BB] hover:bg-[#007b9e] text-white rounded-lg shadow-md transition-colors px-4 py-2"
                         >
                             <Plus className="h-4 w-4 mr-2" />
@@ -86,6 +141,11 @@ export default function MagangPage() {
                     <MagangTable />
                 </CardContent>
             </Card>
+            <TambahMagangModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSuccess={handleSuccessAdd}
+            />
         </div>
     );
 }

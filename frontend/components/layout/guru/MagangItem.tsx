@@ -4,7 +4,7 @@ interface MagangItemProps {
     name: string;
     company: string;
     dateRange: string;
-    status: 'Aktif' | 'Selesai';
+    status: string;
 }
 
 export function MagangItem({ name, company, dateRange, status }: MagangItemProps) {

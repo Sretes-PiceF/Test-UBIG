@@ -73,3 +73,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Pastikan dialog content putih solid */
+[data-radix-dialog-content] {
+  background-color: white !important;
+  border: none !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Optional: Smooth animation */
+[data-radix-dialog-overlay][data-state="open"] {
+  animation: fadeIn 200ms ease-out;
+}

@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dudi;
+use App\Models\Logbook;
+use App\Models\Magang;
+use App\Models\Siswa;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,41 +18,39 @@ class DudiGuruController extends Controller
     /**
      * Get semua data DUDI (Guru bisa akses)
      */
-    public function getAllDudi(Request $request)
-    {
-        // Check guru role
-        if (!Auth::user()->isGuru()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Guru role required.'
-            ], 403);
+public function getAllDudi(Request $request)
+{
+    try {
+        // HANYA 3 DATA YANG DIPERLUKAN:
+        
+        // 1. DUDI AKTIF
+        $dudiAktif = Dudi::where('status', 'aktif')->count();
+        
+        // 2. JUMLAH SISWA MAGANG AKTIF (status 'berlangsung')
+        $siswaMagangAktif = Magang::where('status', 'berlangsung')->count();
+        
+        // 3. RATA-RATA SISWA PER PERUSAHAAN
+        $rataRataSiswaPerPerusahaan = 0;
+        if ($dudiAktif > 0) {
+            $rataRataSiswaPerPerusahaan = round($siswaMagangAktif / $dudiAktif);
         }
-
-        $query = Dudi::with('user');
-
-        // Filter by status
-        if ($request->has('status') && in_array($request->status, Dudi::getStatuses())) {
-            $query->where('status', $request->status);
-        }
-
-        // Search
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nama_perusahaan', 'ILIKE', "%{$search}%")
-                  ->orWhere('penanggung_jawab', 'ILIKE', "%{$search}%")
-                  ->orWhere('email', 'ILIKE', "%{$search}%");
-            });
-        }
-
-        $dudi = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
-            'data' => $dudi,
-            'total' => $dudi->count()
-        ]);
+            'data' => [
+                'dudi_aktif' => $dudiAktif,
+                'siswa_magang_aktif' => $siswaMagangAktif,
+                'rata_rata_siswa_perusahaan' => $rataRataSiswaPerPerusahaan
+            ]
+        ], 200);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil data dashboard',
+            'error' => $th->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Get detail DUDI by ID (Guru bisa akses)
@@ -82,70 +84,79 @@ class DudiGuruController extends Controller
      * Create DUDI baru oleh Guru
      */
     public function createDudi(Request $request)
-    {
-        // Check guru role
-        if (!Auth::user()->isGuru()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Guru role required.'
-            ], 403);
-        }
+{
+    // Check authentication dan guru role dengan null safety
+    $user = Auth::user();
+    
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated. Please login first.'
+        ], 401);
+    }
 
-        $validator = Validator::make($request->all(), [
-            'nama_perusahaan' => 'required|string|max:255',
-            'alamat' => 'required|string',
-            'telepon' => 'required|string|max:20',
-            'email' => 'required|email|unique:dudi,email',
-            'penanggung_jawab' => 'required|string|max:255',
-            'status' => 'required|in:' . implode(',', Dudi::getStatuses())
+    if (!$user->isGuru()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Access denied. Guru role required.'
+        ], 403);
+    }
+
+    $validator = Validator::make($request->all(), [
+        'nama_perusahaan' => 'required|string|max:255',
+        'alamat' => 'required|string',
+        'telepon' => 'required|string|max:20',
+        'email' => 'required|email|unique:dudi,email',
+        'penanggung_jawab' => 'required|string|max:255',
+        'status' => 'required|in:' . implode(',', Dudi::getStatuses())
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    DB::beginTransaction();
+    
+    try {
+        // Create user untuk DUDI
+        $userDudi = User::create([
+            'name' => $request->nama_perusahaan,
+            'email' => $request->email,
+            'password' => bcrypt('password123'),
+            'role' => User::ROLE_DUDI
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // Create dudi
+        $dudi = Dudi::create([
+            'user_id' => $userDudi->id,
+            'nama_perusahaan' => $request->nama_perusahaan,
+            'alamat' => $request->alamat,
+            'telepon' => $request->telepon,
+            'email' => $request->email,
+            'penanggung_jawab' => $request->penanggung_jawab,
+            'status' => $request->status
+        ]);
 
-        DB::beginTransaction();
-        
-        try {
-            // Create user untuk DUDI
-            $user = User::create([
-                'name' => $request->nama_perusahaan,
-                'email' => $request->email, // email perusahaan jadi email login
-                'password' => bcrypt('password123'), // default password
-                'role' => User::ROLE_DUDI
-            ]);
+        DB::commit();
 
-            // Create dudi
-            $dudi = Dudi::create([
-                'user_id' => $user->id,
-                'nama_perusahaan' => $request->nama_perusahaan,
-                'alamat' => $request->alamat,
-                'telepon' => $request->telepon,
-                'email' => $request->email,
-                'penanggung_jawab' => $request->penanggung_jawab,
-                'status' => $request->status
-            ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Data DUDI berhasil dibuat',
+            'data' => $dudi->load('user')
+        ], 201);
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data DUDI berhasil dibuat',
-                'data' => $dudi->load('user')
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat data DUDI: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal membuat data DUDI: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Update DUDI oleh Guru

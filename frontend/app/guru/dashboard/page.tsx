@@ -7,6 +7,7 @@ import { ProgressCard } from "@/components/layout/guru/Progres";
 import { CardStats } from "@/components/ui/CardStats";
 import { dashboardAPI } from "@/lib/api";
 import { DashboardData } from "@/types/dashboard";
+import { isAxiosError } from "axios";
 import {
     User, Building2, GraduationCap, BookOpen
 } from "lucide-react";
@@ -31,7 +32,6 @@ export default function DashboardPage() {
                 setDashboardData(response.data);
             }
         } catch (err: unknown) {
-
             if (isAxiosError(err)) {
                 const serverMessage =
                     err.response?.data?.error ||

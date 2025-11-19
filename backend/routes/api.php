@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DudiGuruController;
+use App\Http\Controllers\LogbookGuruController;
+use App\Http\Controllers\MagangGuruController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Middleware\GuruMiddleware;
 use App\Http\Middleware\SiswaMiddleware;
@@ -18,6 +20,9 @@ Route::post('/register/guru', [AuthController::class, 'registerGuru']);
 Route::post('/login', [AuthController::class, 'login']);
 
     Route::get('/dashboard', [DashboardController::class, 'getDashboardData']);
+    Route::get('/dashboard/progress', [DashboardController::class, 'overview']);
+    Route::get('/dashboard/dudi', [DashboardController::class, 'listDudi']);
+    Route::get('/dashboard/magang', [DashboardController::class, 'listMagang']);
 
 // Protected routes - butuh authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -29,20 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/siswa/dashboard', [SiswaController::class, 'dashboard']);
     });
 });
-
 Route::middleware('auth:sanctum')->group(function (){
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('me', [AuthController::class, 'me']);
-
+    
     Route::middleware(GuruMiddleware::class)->group(function (){
-
-        //Route DASHBOARD
-        // Route::get();
-        // Route::get();
-        // Route::post();
-        // Route::patch();
-        // Route::delete();
-
         //Route DUDI
         Route::get('/guru/dudi', [DudiGuruController::class, 'getAllDudi']);
         Route::get('/guru/dudi/{id}', [DudiGuruController::class, 'getDudiById']);
@@ -50,9 +46,8 @@ Route::middleware('auth:sanctum')->group(function (){
         Route::patch('/guru/update/dudi/{id}', [DudiGuruController::class, 'updateDudi']);
         Route::delete('/guru/delete/dudi{id}', [DudiGuruController::class, 'deleteDudi']);
         Route::get('/guru/status/dudi', [DudiGuruController::class, 'getStatistics']);
-
-
-        //Route MAGANG
+        
+        //Route DASHBOARD
         // Route::get();
         // Route::get();
         // Route::post();
@@ -60,12 +55,23 @@ Route::middleware('auth:sanctum')->group(function (){
         // Route::delete();
 
 
-        //Route LOGBOOK
-        // Route::get();
-        // Route::get();
-        // Route::post();
-        // Route::patch();
-        // Route::delete();
 
+        
+        
+        
     });
 });
+
+//Route LOGBOOK
+Route::get('/guru/logbook', [LogbookGuruController::class, 'getAllLogbook']);
+// Route::get();
+// Route::post();
+// Route::patch();
+// Route::delete();
+
+        //Route MAGANG
+        Route::get('/guru/magang', [MagangGuruController::class, 'getAllMagang']);
+        // Route::get();
+        // Route::post();
+        // Route::patch();
+        // Route::delete();

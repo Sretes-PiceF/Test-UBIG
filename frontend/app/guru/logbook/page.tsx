@@ -1,4 +1,4 @@
-// app/guru/logbook/page.tsx
+'use client';
 
 import { CardStats } from "@/components/ui/CardStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import {
     MoreHorizontal,
     Clock,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 // Tipe data untuk entri Logbook
 interface LogbookEntry {
@@ -23,6 +24,14 @@ interface LogbookEntry {
     status: 'Disetujui' | 'Belum Diverifikasi' | 'Ditolak';
     teacherNote: string;
     dudiNote: string;
+}
+
+// Interface untuk data stats logbook
+interface LogbookStatsData {
+    total_logbook: number;
+    belum_diverifikasi: number;
+    disetujui: number;
+    ditolak: number;
 }
 
 const logbookData: LogbookEntry[] = [
@@ -66,6 +75,59 @@ const getStatusClasses = (status: LogbookEntry['status']) => {
 };
 
 export default function LogBookPage() {
+    const [statsData, setStatsData] = useState<LogbookStatsData>({
+        total_logbook: 0,
+        belum_diverifikasi: 0,
+        disetujui: 0,
+        ditolak: 0
+    });
+    const [loading, setLoading] = useState(true);
+
+    const fetchLogbookStats = async () => {
+        try {
+            setLoading(true);
+
+            // Sesuaikan dengan route backend untuk data logbook
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/guru/logbook`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('Logbook Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const text = await response.text();
+            console.log('Logbook Raw response:', text);
+
+            // Coba parse JSON hanya jika text tidak kosong
+            if (text) {
+                const result = JSON.parse(text);
+
+                if (result.success) {
+                    setStatsData(result.data);
+                } else {
+                    console.error('Logbook API returned error:', result.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error fetching Logbook stats:', error);
+            // Tetap gunakan default values (0) jika error
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLogbookStats();
+    }, []);
+
     return (
         <div className="p-8">
 
@@ -81,29 +143,29 @@ export default function LogBookPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
                 <CardStats
                     title="Total Logbook"
-                    value={350}
+                    value={loading ? "..." : statsData.total_logbook}
                     description="Keseluruhan catatan harian"
                     icon={BookOpen}
                 />
 
                 <CardStats
                     title="Belum Diverifikasi"
-                    value={45}
-                    description="Menunggu persetujuan Guru/DUDI"
+                    value={loading ? "..." : statsData.belum_diverifikasi}
+                    description="Menunggu verifikasi"
                     icon={Clock}
                 />
 
                 <CardStats
                     title="Disetujui"
-                    value={280}
-                    description="Telah disetujui Guru & DUDI"
+                    value={loading ? "..." : statsData.disetujui}
+                    description="Telah terverifikasi"
                     icon={ThumbsUp}
                 />
 
                 <CardStats
                     title="Ditolak"
-                    value={25}
-                    description="Perlu revisi siswa"
+                    value={loading ? "..." : statsData.ditolak}
+                    description="Perlu perbaikan"
                     icon={ThumbsDown}
                 />
             </div>

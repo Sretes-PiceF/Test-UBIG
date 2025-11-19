@@ -36,6 +36,10 @@ class Dudi extends Model
     }
 
     // Relationship dengan user
+    public function magang()
+    {
+        return $this->hasMany(Magang::class, 'dudi_id');
+    }
     public function user()
     {
         return $this->belongsTo(User::class);

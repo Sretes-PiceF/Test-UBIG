@@ -1,36 +1,37 @@
-// components/LogbookItem.tsx
-import { BookOpen } from "lucide-react";
+import { CheckCircle, Clock, XCircle } from "lucide-react";
 
-interface LogbookItemProps {
-    activity: string;
-    date: string;
-    note: string;
-    status: 'Disetujui' | 'Menunggu';
+export interface LogbookItemProps {
+    kegiatan: string;
+    tanggal: string;      // <= WAJIB ADA
+    kendala?: string | null;
+    status: "pending" | "disetujui" | "ditolak";
 }
 
-export function LogbookItem({ activity, date, note, status }: LogbookItemProps) {
-    const statusClass = status === 'Disetujui' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600';
+export function LogbookItem({ kegiatan, tanggal, kendala, status }: LogbookItemProps) {
+
+    const statusIcon = {
+        disetujui: <CheckCircle className="w-4 h-4 text-green-600" />,
+        pending: <Clock className="w-4 h-4 text-yellow-500" />,
+        ditolak: <XCircle className="w-4 h-4 text-red-600" />
+    };
 
     return (
-        <div className="py-3 border-b last:border-b-0 space-y-1">
-            <div className="flex justify-between items-start">
-                {/* Detail Kiri */}
-                <div className="flex items-start space-x-3">
-                    <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-green-100 text-green-600 shrink-0 mt-1">
-                        <BookOpen className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{activity}</p>
-                        <p className="text-xs text-gray-500">{date}</p>
-                        <p className="text-sm text-orange-700 italic">{note}</p>
-                    </div>
-                </div>
-
-                {/* Status Kanan */}
-                <div className={`px-3 py-1 text-xs font-medium rounded-full ${statusClass} shrink-0`}>
-                    {status}
-                </div>
+        <div className="p-3 rounded-lg border bg-white shadow-sm">
+            <div className="flex justify-between items-center">
+                <p className="font-medium text-gray-900">{kegiatan}</p>
+                {statusIcon[status]}
             </div>
+
+            {/* <== TANGGAL WAJIB ADA, NOTE: TypeScript error muncul kalau ini tidak match */}
+            <p className="text-xs text-gray-500 mt-1">
+                {tanggal}
+            </p>
+
+            {kendala && (
+                <p className="text-sm text-gray-700 mt-2">
+                    <span className="font-semibold">Catatan:</span> {kendala}
+                </p>
+            )}
         </div>
     );
 }

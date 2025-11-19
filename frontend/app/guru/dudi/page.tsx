@@ -1,10 +1,71 @@
+'use client';
+
 import { CardStats } from "@/components/ui/CardStats";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DudiTable } from "@/components/layout/guru/DudiTable";
-import { User, Building2, GraduationCap, Plus } from "lucide-react";
+import { TambahDudiModal } from "@/components/layout/guru/create/TambahDudiModal";
+import { User, Building2, Plus, Building } from "lucide-react";
+import { useState, useEffect } from "react";
+import { DudiDashboardData } from "@/types/dashboard";
 
 export default function DudiPage() {
+    const [statsData, setStatsData] = useState<DudiDashboardData>({
+        dudi_aktif: 0,
+        siswa_magang_aktif: 0,
+        rata_rata_siswa_perusahaan: 0
+    });
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchDudiStats = async () => {
+        try {
+            setLoading(true);
+
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/guru/dudi`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const text = await response.text();
+            console.log('Raw response:', text);
+
+            if (text) {
+                const result = JSON.parse(text);
+
+                if (result.success) {
+                    setStatsData(result.data);
+                } else {
+                    console.error('API returned error:', result.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error fetching DUDI stats:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDudiStats();
+    }, []);
+
+    const handleSuccessAdd = () => {
+        // Refresh data setelah berhasil menambah DUDI
+        fetchDudiStats();
+    };
+
     return (
         <div className="p-8">
             {/* Header Halaman */}
@@ -19,23 +80,23 @@ export default function DudiPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10">
                 <CardStats
                     title="Total DUDI"
-                    value={55}
+                    value={loading ? "..." : statsData.dudi_aktif}
                     description="Total perusahaan terdaftar"
                     icon={Building2}
                 />
 
                 <CardStats
                     title="Total Siswa Magang"
-                    value={150}
+                    value={loading ? "..." : statsData.siswa_magang_aktif}
                     description="Seluruh siswa terdaftar"
                     icon={User}
                 />
 
                 <CardStats
                     title="Rata - Rata Siswa"
-                    value={120}
-                    description="Sedang aktif magang"
-                    icon={GraduationCap}
+                    value={loading ? "..." : statsData.rata_rata_siswa_perusahaan}
+                    description="Per perusahaan"
+                    icon={Building}
                 />
             </div>
 
@@ -48,7 +109,10 @@ export default function DudiPage() {
                             Daftar DUDI
                         </CardTitle>
 
-                        <Button className="bg-[#0097BB] hover:bg-[#007b9e] text-white rounded-lg px-4 py-2">
+                        <Button
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-[#0097BB] hover:bg-[#007b9e] text-white rounded-lg px-4 py-2"
+                        >
                             <Plus className="h-4 w-4 mr-2" />
                             Tambah DUDI
                         </Button>
@@ -58,6 +122,13 @@ export default function DudiPage() {
                     <DudiTable />
                 </CardContent>
             </Card>
+
+            {/* Modal Tambah DUDI */}
+            <TambahDudiModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSuccess={handleSuccessAdd}
+            />
         </div>
     );
 }
