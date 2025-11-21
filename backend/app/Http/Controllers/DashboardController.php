@@ -91,4 +91,14 @@ class DashboardController extends Controller
 
         return response()->json($magang);
     }
+    public function listLogbook()
+    {
+        // Ambil 5 data magang terbaru beserta relasi
+        $magang = Logbook::with(['magang'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json($magang);
+    }
 }

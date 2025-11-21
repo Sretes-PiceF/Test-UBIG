@@ -22,8 +22,8 @@ class MagangSiswaController extends Controller
                 ], 404);
             }
 
-            // Get data magang siswa dengan relasi
-            $magang = Magang::with(['dudi', 'guru'])
+            // Get data magang siswa yang aktif/selesai
+            $magang = Magang::with(['dudi', 'guru', 'siswa'])
                 ->where('siswa_id', $siswa->id)
                 ->whereIn('status', ['diterima', 'berlangsung', 'selesai'])
                 ->first();
@@ -32,34 +32,21 @@ class MagangSiswaController extends Controller
                 return response()->json([
                     'success' => true,
                     'data' => null,
-                    'message' => 'Belum memiliki magang aktif'
+                    'message' => 'Belum memiliki magang'
                 ]);
             }
 
-            // Format data response
+            // Format response
             $data = [
-                'id' => $magang->id,
-                'status' => $magang->status,
-                'nilai_akhir' => $magang->nilai_akhir,
-                'tanggal_mulai' => $magang->tanggal_mulai ? $magang->tanggal_mulai->format('Y-m-d') : null,
-                'tanggal_selesai' => $magang->tanggal_selesai ? $magang->tanggal_selesai->format('Y-m-d') : null,
-                'siswa' => [
-                    'nama' => $siswa->nama,
-                    'nis' => $siswa->nis,
-                    'kelas' => $siswa->kelas,
-                    'jurusan' => $siswa->jurusan,
-                ],
-                'dudi' => [
-                    'nama_perusahaan' => $magang->dudi->nama_perusahaan,
-                    'alamat' => $magang->dudi->alamat,
-                    'telepon' => $magang->dudi->telepon,
-                    'email' => $magang->dudi->email,
-                    'penanggung_jawab' => $magang->dudi->penanggung_jawab,
-                ],
-                'guru' => $magang->guru ? [
-                    'nama' => $magang->guru->nama,
-                    'nip' => $magang->guru->nip,
-                ] : null
+                'name' => $magang->siswa->nama,
+                'nis' => $magang->siswa->nis,
+                'class' => $magang->siswa->kelas,
+                'major' => $magang->siswa->jurusan,
+                'company' => $magang->dudi->nama_perusahaan,
+                'address' => $magang->dudi->alamat,
+                'period' => $this->formatSimplePeriod($magang->tanggal_mulai, $magang->tanggal_selesai),
+                'status' => $this->getStatusDisplay($magang->status),
+                'finalGrade' => $magang->nilai_akhir
             ];
 
             return response()->json([
@@ -69,6 +56,7 @@ class MagangSiswaController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error in getMagangSiswa: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
@@ -76,5 +64,61 @@ class MagangSiswaController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Format periode sederhana tanpa Carbon
+     */
+    private function formatSimplePeriod($tanggalMulai, $tanggalSelesai)
+    {
+        if (!$tanggalMulai) {
+            return 'Belum ditentukan';
+        }
+
+        // Format tanggal secara manual
+        $mulai = $this->formatDateString($tanggalMulai);
+        $selesai = $tanggalSelesai ? $this->formatDateString($tanggalSelesai) : 'Sekarang';
+
+        return $mulai . ' s.d ' . $selesai;
+    }
+
+    /**
+     * Format date string to "d M Y" format
+     */
+    private function formatDateString($dateString)
+    {
+        // Jika sudah dalam format yang diinginkan, return langsung
+        if (is_string($dateString) && preg_match('/\d{1,2} [A-Za-z]{3} \d{4}/', $dateString)) {
+            return $dateString;
+        }
+
+        // Coba parse berbagai format date
+        try {
+            $timestamp = strtotime($dateString);
+            if ($timestamp !== false) {
+                return date('d M Y', $timestamp);
+            }
+        } catch (\Exception $e) {
+            // Jika gagal, return as is
+        }
+
+        return $dateString;
+    }
+
+    /**
+     * Convert status to display format
+     */
+    private function getStatusDisplay($status)
+    {
+        $statusMap = [
+            'diterima' => 'Aktif',
+            'berlangsung' => 'Aktif',
+            'selesai' => 'Selesai',
+            'ditolak' => 'Ditolak',
+            'pending' => 'Menunggu',
+            'dibatalkan' => 'Dibatalkan'
+        ];
+
+        return $statusMap[$status] ?? $status;
     }
 }

@@ -1,8 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Calendar, BookOpen, Eye } from "lucide-react";
+import { User, Calendar, BookOpen, Eye, MoreHorizontal, SquarePenIcon, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLogbook, LogbookEntry } from '@/hooks/useLogbook';
 
 // Fungsi untuk mendapatkan class CSS berdasarkan status
@@ -39,6 +45,7 @@ export function LogbookTable() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [entriesPerPage, setEntriesPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [processing, setProcessing] = useState<number | null>(null);
 
     // Debounced search
     useEffect(() => {
@@ -69,20 +76,126 @@ export function LogbookTable() {
         setCurrentPage(newPage);
     };
 
-const getPageNumbers = () => {
-    const totalPages = meta.last_page || 1;
-    const maxPagesToShow = 5;
-    
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-    
-    // Adjust if we're near the end
-    if (endPage - startPage + 1 < maxPagesToShow) {
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
-};
+    // Handler untuk delete logbook
+    const handleDelete = async (entry: LogbookEntry) => {
+        if (!confirm('Apakah Anda yakin ingin menghapus logbook ini?')) {
+            return;
+        }
+
+        setProcessing(entry.id);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`http://localhost:8000/api/logbook/delete/${entry.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Refresh data setelah delete berhasil
+                await fetchLogbook({
+                    page: currentPage,
+                    per_page: entriesPerPage,
+                    search: searchTerm,
+                    status: statusFilter,
+                });
+                alert('Logbook berhasil dihapus');
+            } else {
+                alert(result.message || 'Gagal menghapus logbook');
+            }
+        } catch (err) {
+            console.error('Error deleting logbook:', err);
+            alert('Terjadi kesalahan saat menghapus logbook');
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    // Handler untuk edit logbook
+    const handleEdit = (entry: LogbookEntry) => {
+        // Buka modal atau form edit
+        console.log('Edit logbook:', entry);
+        
+        // Contoh implementasi modal edit sederhana
+        const kegiatan = prompt('Edit Kegiatan:', entry.kegiatan);
+        if (kegiatan === null) return; // User cancel
+
+        const kendala = prompt('Edit Kendala:', entry.kendala);
+        if (kendala === null) return; // User cancel
+
+        // Jika ada perubahan, lakukan update
+        if (kegiatan !== entry.kegiatan || kendala !== entry.kendala) {
+            handleUpdateLogbook(entry.id, kegiatan, kendala);
+        }
+    };
+
+    // Handler untuk update logbook
+    const handleUpdateLogbook = async (id: number, kegiatan: string, kendala: string) => {
+        setProcessing(id);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`http://localhost:8000/api/logbook/update/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    kegiatan,
+                    kendala,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Refresh data setelah update berhasil
+                await fetchLogbook({
+                    page: currentPage,
+                    per_page: entriesPerPage,
+                    search: searchTerm,
+                    status: statusFilter,
+                });
+                alert('Logbook berhasil diupdate');
+            } else {
+                alert(result.message || 'Gagal mengupdate logbook');
+            }
+        } catch (err) {
+            console.error('Error updating logbook:', err);
+            alert('Terjadi kesalahan saat mengupdate logbook');
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    // Handler untuk view detail
+    const handleViewDetail = (entry: LogbookEntry) => {
+        console.log('Lihat detail logbook:', entry);
+        // Bisa ditambahkan modal detail di sini
+        alert(`Detail Logbook:\n\nSiswa: ${entry.siswa.nama}\nTanggal: ${entry.tanggal_formatted}\nKegiatan: ${entry.kegiatan}\nKendala: ${entry.kendala}\nStatus: ${getStatusLabel(entry.status_verifikasi)}`);
+    };
+
+    const getPageNumbers = () => {
+        const totalPages = meta.last_page || 1;
+        const maxPagesToShow = 5;
+        
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+        
+        // Adjust if we're near the end
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+        
+        return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+    };
 
     if (error) {
         return (
@@ -173,7 +286,7 @@ const getPageNumbers = () => {
                                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/3">Kegiatan & Kendala</th>
                                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-auto">Status</th>
                                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">Catatan Verifikasi</th>
-                                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">Aksi</th>
+                                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Aksi</th>
                             </tr>
                         </thead>
 
@@ -267,14 +380,49 @@ const getPageNumbers = () => {
                                             </div>
                                         </td>
 
-                                        {/* Kolom Aksi */}
+                                        {/* Kolom Aksi dengan Dropdown */}
                                         <td className="px-3 py-4 align-top whitespace-nowrap text-left text-sm font-medium">
-                                            <button
-                                                className="text-gray-400 hover:text-[#0097BB] transition-colors p-1 rounded-md"
-                                                title="Lihat Detail"
-                                            >
-                                                <Eye className="h-5 w-5" />
-                                            </button>
+                                            <div className="flex items-center space-x-2">
+                                                {/* Dropdown Menu untuk Aksi Lainnya */}
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button 
+                                                            className="text-gray-400 hover:text-[#0097BB] transition-colors p-1 rounded-md"
+                                                            title="Aksi Lainnya"
+                                                            disabled={processing === entry.id}
+                                                        >
+                                                            {processing === entry.id ? (
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#0097BB]"></div>
+                                                            ) : (
+                                                                <MoreHorizontal className="h-5 w-5" />
+                                                            )}
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-48">
+                                                        <DropdownMenuItem 
+                                                            onClick={() => handleViewDetail(entry)}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <Eye className="h-4 w-4 mr-2" />
+                                                            Lihat Detail
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => handleEdit(entry)}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <SquarePenIcon className="h-4 w-4 mr-2" />
+                                                            Edit Logbook
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => handleDelete(entry)}
+                                                            className="cursor-pointer text-red-600 focus:text-red-600"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            Hapus Logbook
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

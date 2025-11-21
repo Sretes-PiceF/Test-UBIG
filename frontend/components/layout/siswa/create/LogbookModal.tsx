@@ -199,9 +199,9 @@ export function TambahLogbookModal({ open, onOpenChange, onSuccess }: TambahLogb
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg bg-white border-0 shadow-2xl">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-xl">
+            <DialogContent className="sm:max-w-lg bg-white border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="sticky top-0 bg-white z-10 border-b border-gray-200">
+                    <DialogTitle className="flex items-center gap-2 text-xl py-2">
                         <FileText className="h-5 w-5 text-[#0097BB]" />
                         Tambah Logbook Harian
                     </DialogTitle>
@@ -345,7 +345,7 @@ export function TambahLogbookModal({ open, onOpenChange, onSuccess }: TambahLogb
                             </p>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons - TIDAK STICKY */}
                         <div className="flex gap-3 pt-4">
                             <Button
                                 type="button"

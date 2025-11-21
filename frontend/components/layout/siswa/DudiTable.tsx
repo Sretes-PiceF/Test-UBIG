@@ -24,22 +24,6 @@ interface DudiData {
     sudah_daftar: boolean;
 }
 
-interface DudiResponse {
-    dudi_aktif: DudiData[];
-    jumlah_pendaftaran: number;
-    maksimal_pendaftaran: number;
-    bisa_daftar: boolean;
-    sudah_punya_magang_aktif: boolean;
-    magang_aktif?: {
-        id: number;
-        status: string;
-        dudi: {
-            nama_perusahaan: string;
-            bidang_usaha: string;
-        };
-    };
-}
-
 // Props untuk komponen
 interface DudiTableProps {
     onApply?: (dudiId: number) => void;
@@ -133,81 +117,6 @@ export function DudiTable({ onApply, onViewDetail }: DudiTableProps) {
             fasilitas: ["Laptop", "Internet", "Makan Siang"],
             persyaratan: ["Surat Pengantar", "CV", "Transkrip Nilai"],
             sudah_daftar: false
-        },
-        {
-            id: 2,
-            nama_perusahaan: "CV Digital Solusi",
-            alamat: "Jl. Sudirman No. 45, Surabaya",
-            telepon: "(031) 7654321",
-            email: "hr@digitalsolusi.co.id",
-            penanggung_jawab: "Sari Dewi",
-            status_dudi: "aktif",
-            bidang_usaha: "Digital Marketing",
-            deskripsi: "Konsultan digital marketing yang membantu UMKM berkembang di era digital. Menyediakan program magang untuk siswa SMK jurusan multimedia.",
-            kuota: { terisi: 5, total: 8, tersisa: 3 },
-            fasilitas: ["Workshop", "Mentoring", "Sertifikat"],
-            persyaratan: ["Portfolio", "Surat Pengantar"],
-            sudah_daftar: false
-        },
-        {
-            id: 3,
-            nama_perusahaan: "PT Inovasi Mandiri",
-            alamat: "Jl. Diponegoro No. 78, Surabaya",
-            telepon: "(031) 8889999",
-            email: "recruitment@inovasimandiri.com",
-            penanggung_jawab: "Budi Santoso",
-            status_dudi: "aktif",
-            bidang_usaha: "Software Development",
-            deskripsi: "Perusahaan software house yang mengembangkan sistem informasi untuk berbagai industri. Menawarkan program magang untuk siswa jurusan RPL.",
-            kuota: { terisi: 12, total: 15, tersisa: 3 },
-            fasilitas: ["Flexible Time", "Project Based", "Certificate"],
-            persyaratan: ["Basic Programming", "Surat Pengantar"],
-            sudah_daftar: true
-        },
-        {
-            id: 4,
-            nama_perusahaan: "PT Teknologi Maju",
-            alamat: "Jl. Ahmad Yani No. 90, Malang",
-            telepon: "(0341) 4445555",
-            email: "info@teknologimaju.com",
-            penanggung_jawab: "Rina Setiawan",
-            status_dudi: "aktif",
-            bidang_usaha: "Hardware & Networking",
-            deskripsi: "Spesialis hardware dan jaringan komputer. Membuka kesempatan magang untuk siswa jurusan TKJ dan TITL.",
-            kuota: { terisi: 3, total: 6, tersisa: 3 },
-            fasilitas: ["Toolkit", "Training", "Transport Allowance"],
-            persyaratan: ["Surat Pengantar", "CV"],
-            sudah_daftar: false
-        },
-        {
-            id: 5,
-            nama_perusahaan: "CV Solusi Digital Prima",
-            alamat: "Jl. Gatot Subroto No. 15, Bandung",
-            telepon: "(022) 3332222",
-            email: "career@solusidigital.com",
-            penanggung_jawab: "Dian Prasetyo",
-            status_dudi: "aktif",
-            bidang_usaha: "E-commerce",
-            deskripsi: "Platform e-commerce lokal yang menyediakan layanan logistik dan pemasaran digital. Menerima magang untuk siswa jurusan pemasaran.",
-            kuota: { terisi: 7, total: 10, tersisa: 3 },
-            fasilitas: ["Laptop", "Internet", "Lunch"],
-            persyaratan: ["Surat Pengantar", "Motivation Letter"],
-            sudah_daftar: false
-        },
-        {
-            id: 6,
-            nama_perusahaan: "PT Inovasi Global",
-            alamat: "Jl. Thamrin No. 22, Jakarta",
-            telepon: "(021) 9998888",
-            email: "hr@inovasiglobal.com",
-            penanggung_jawab: "Fajar Hidayat",
-            status_dudi: "aktif",
-            bidang_usaha: "Konsultan IT",
-            deskripsi: "Konsultan IT yang membantu perusahaan dalam transformasi digital. Membuka program magang untuk siswa SMK jurusan RPL dan TKJ.",
-            kuota: { terisi: 9, total: 12, tersisa: 3 },
-            fasilitas: ["Mentor", "Certificate", "Networking"],
-            persyaratan: ["CV", "Surat Pengantar", "Basic IT Knowledge"],
-            sudah_daftar: false
         }
     ];
 
@@ -229,8 +138,8 @@ export function DudiTable({ onApply, onViewDetail }: DudiTableProps) {
         }, 3000);
     };
 
-    // Handler untuk mendaftar ke DUDI
    // Handler untuk mendaftar ke DUDI
+// Handler untuk mendaftar ke DUDI
 const handleApply = async (dudiId: number) => {
     if (!bisaDaftar) {
         showNotification(`Anda sudah mencapai batas maksimal pendaftaran (${maksimalPendaftaran} DUDI)`, "error");
@@ -252,30 +161,58 @@ const handleApply = async (dudiId: number) => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({
-                surat_pengantar: "Surat pengantar dari sekolah",
-                cv: null,
-                portofolio: null
-            })
+            // Tidak perlu mengirim body karena backend hanya butuh dudi_id dari URL
         });
 
-        const result = await response.json();
-        
-        if (result.success) {
+        // Parse response JSON terlebih dahulu
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            console.error('JSON parse error:', e);
+            showNotification("Server mengembalikan response yang tidak valid", "error");
+            return;
+        }
+
+        // Cek apakah sukses berdasarkan response
+        if (response.ok && result.success) {
+            // Update UI dulu untuk instant feedback
+            setDudiData(prevData => 
+                prevData.map(dudi => 
+                    dudi.id === dudiId 
+                        ? { ...dudi, sudah_daftar: true }
+                        : dudi
+                )
+            );
+            
+            // Update jumlah pendaftaran
+            setJumlahPendaftaran(prev => prev + 1);
+            
+            // Cek apakah sudah mencapai batas maksimal
+            if (jumlahPendaftaran + 1 >= maksimalPendaftaran) {
+                setBisaDaftar(false);
+            }
+            
+            // Tampilkan notifikasi sukses
             showNotification("Pendaftaran magang berhasil dikirim! Menunggu verifikasi dari perusahaan.", "success");
             
-            // REFRESH DATA - Ini yang penting!
-            await fetchDudiAktif();
+            // Refresh data dari API untuk sinkronisasi setelah delay
+            setTimeout(async () => {
+                await fetchDudiAktif();
+            }, 1000);
             
             if (onApply) {
                 onApply(dudiId);
             }
         } else {
-            showNotification(result.message || "Gagal mengirim pendaftaran", "error");
+            // Tampilkan pesan error dari backend
+            const errorMessage = result.message || "Gagal mengirim pendaftaran";
+            showNotification(errorMessage, "error");
+            console.error('Backend error:', result);
         }
     } catch (err: any) {
-        showNotification("Terjadi kesalahan saat mengirim pendaftaran", "error");
         console.error('Apply error:', err);
+        showNotification("Terjadi kesalahan saat mengirim pendaftaran. Silakan coba lagi.", "error");
     }
 };
 

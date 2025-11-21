@@ -6,40 +6,42 @@ use App\Models\Logbook;
 use App\Http\Requests\StoreLogbookRequest;
 use App\Http\Requests\UpdateLogbookRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LogbookGuruController extends Controller
 {
-   public function getAllLogbook () {
-     try {
-        // TOTAL LOGBOOK - semua catatan harian
-        $totalLogbook = Logbook::count();
-        
-        // LOGBOOK BELUM DIVERIFIKASI (status pending)
-        $belumDiverifikasi = Logbook::where('status_verifikasi', 'pending')->count();
-        
-        // LOGBOOK DISETUJUI
-        $disetujui = Logbook::where('status_verifikasi', 'disetujui')->count();
-        
-        // LOGBOOK DITOLAK
-        $ditolak = Logbook::where('status_verifikasi', 'ditolak')->count();
+    public function getAllLogbook()
+    {
+        try {
+            // TOTAL LOGBOOK - semua catatan harian
+            $totalLogbook = Logbook::count();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_logbook' => $totalLogbook,
-                'belum_diverifikasi'=> $belumDiverifikasi,
-                'disetujui'=> $disetujui,
-                'ditolak'=> $ditolak
-            ]
-        ], 200);
-    } catch (\Throwable $th) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengambil data dashboard logbook',
-            'error' => $th->getMessage()
-        ], 500);
+            // LOGBOOK BELUM DIVERIFIKASI (status pending)
+            $belumDiverifikasi = Logbook::where('status_verifikasi', 'pending')->count();
+
+            // LOGBOOK DISETUJUI
+            $disetujui = Logbook::where('status_verifikasi', 'disetujui')->count();
+
+            // LOGBOOK DITOLAK
+            $ditolak = Logbook::where('status_verifikasi', 'ditolak')->count();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_logbook' => $totalLogbook,
+                    'belum_diverifikasi' => $belumDiverifikasi,
+                    'disetujui' => $disetujui,
+                    'ditolak' => $ditolak
+                ]
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data dashboard logbook',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
-   }
 
     public function index(Request $request)
     {
@@ -52,11 +54,11 @@ class LogbookGuruController extends Controller
                 'magang.siswa.user',
                 'magang.dudi'
             ])
-            ->search($search)
-            ->byStatus($status)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+                ->search($search)
+                ->byStatus($status)
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
 
             // Transform data untuk frontend
             $logbooks->getCollection()->transform(function ($logbook) {
@@ -109,7 +111,7 @@ class LogbookGuruController extends Controller
         }
     }
 
-     public function show($id)
+    public function show($id)
     {
         try {
             $logbook = Logbook::with([
@@ -164,7 +166,7 @@ class LogbookGuruController extends Controller
             ]);
 
             $logbook = Logbook::findOrFail($id);
-            
+
             $logbook->update([
                 'status_verifikasi' => $request->status_verifikasi,
                 'catatan_guru' => $request->catatan_guru,
@@ -180,6 +182,90 @@ class LogbookGuruController extends Controller
                 'success' => false,
                 'message' => 'Gagal memverifikasi logbook',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            // Cari logbook
+            $logbook = Logbook::find($id);
+
+            if (!$logbook) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Logbook tidak ditemukan'
+                ], 404);
+            }
+
+            // Validasi input
+            $request->validate([
+                'kegiatan' => 'required|string',
+                'kendala' => 'required|string',
+                'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            ]);
+
+            // Handle file upload
+            $filePath = $logbook->file;
+            if ($request->hasFile('file')) {
+                // Delete old file if exists
+                if ($logbook->file && Storage::exists($logbook->file)) {
+                    Storage::delete($logbook->file);
+                }
+
+                // Store new file
+                $filePath = $request->file('file')->store('logbook_files', 'public');
+            }
+
+            // Update logbook
+            $logbook->update([
+                'kegiatan' => $request->kegiatan,
+                'kendala' => $request->kendala,
+                'file' => $filePath,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logbook berhasil diupdate'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate logbook'
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            // Cari logbook
+            $logbook = Logbook::find($id);
+
+            if (!$logbook) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Logbook tidak ditemukan'
+                ], 404);
+            }
+
+            // Delete file if exists
+            if ($logbook->file && Storage::exists($logbook->file)) {
+                Storage::delete($logbook->file);
+            }
+
+            // Delete logbook
+            $logbook->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logbook berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus logbook'
             ], 500);
         }
     }

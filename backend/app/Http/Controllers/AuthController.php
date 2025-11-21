@@ -20,8 +20,10 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
             'nis' => 'required|unique:siswa',
-            'kelas' => 'required',
-            'jurusan' => 'required'
+            'kelas' => 'required|string|max:50',
+            'jurusan' => 'required|string|max:100',
+            'alamat' => 'nullable|string',
+            'telepon' => 'nullable|string|max:15'
         ]);
 
         DB::beginTransaction();
@@ -61,9 +63,9 @@ class AuthController extends Controller
         }
     }
 
-    public function registerGuru (Request $request) 
+    public function registerGuru(Request $request)
     {
-        
+
         $request->validate([
             'nip' => 'required|string|max:255',
             'nama' => 'required|string|max:255',

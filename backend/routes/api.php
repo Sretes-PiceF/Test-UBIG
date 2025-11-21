@@ -7,6 +7,7 @@ use App\Http\Controllers\DudiSiswaController;
 use App\Http\Controllers\LogbookGuruController;
 use App\Http\Controllers\LogbookSiswaController;
 use App\Http\Controllers\MagangGuruController;
+use App\Http\Controllers\MagangSiswaController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Middleware\GuruMiddleware;
 use App\Http\Middleware\SiswaMiddleware;
@@ -31,8 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/siswa/profile', [SiswaController::class, 'getProfile']);
         Route::put('/siswa/profile', [SiswaController::class, 'updateProfile']);
         Route::get('/siswa/dashboard', [SiswaController::class, 'dashboard']);
-        //Logbook SIswa
         Route::get('/magang/status', [LogbookSiswaController::class, 'getStatusMagang']);
+        //Logbook SIswa
         Route::prefix('siswa')->group(function () {
             Route::get('/logbook', [LogbookSiswaController::class, 'index']);
             Route::get('/logbook/id', [LogbookSiswaController::class, 'show']);
@@ -44,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('dudi/aktif', [DudiSiswaController::class, 'getDudiAktif']);
             Route::get('dudi/{id}', [DudiSiswaController::class, 'show']);
             Route::post('dudi/{dudi_id}/daftar', [DudiSiswaController::class, 'store']);
+
+
+            Route::get('/magang', [MagangSiswaController::class, 'getMagangSiswa']);
         });
     });
 });
@@ -68,11 +72,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard/progress', [DashboardController::class, 'overview']);
         Route::get('/dashboard/dudi', [DashboardController::class, 'listDudi']);
         Route::get('/dashboard/magang', [DashboardController::class, 'listMagang']);
+        Route::get('/dashboard/logbook', [DashboardController::class, 'listLogbook']);
 
         //Route LOGBOOK
         Route::get('/guru/logbook', [LogbookGuruController::class, 'getAllLogbook']);
         Route::get('/logbook', [LogbookGuruController::class, 'index']);
         Route::get('/logbook/{id}', [LogbookGuruController::class, 'show']);
+        Route::patch('/logbook/update/{id}', [LogbookGuruController::class, 'update']);
+        Route::delete('/logbook/delete/{id}', [LogbookGuruController::class, 'destroy']);
         // Verifikasi logbook
         Route::put('/logbook/{id}/verifikasi', [LogbookGuruController::class, 'verifikasi']);
 
