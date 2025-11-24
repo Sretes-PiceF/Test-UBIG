@@ -157,6 +157,91 @@ class LogbookGuruController extends Controller
         }
     }
 
+    // Update method untuk handle kegiatan, kendala, file, DAN status verifikasi
+    public function update(Request $request, $id)
+    {
+        try {
+            // Cari logbook dengan relasi magang
+            $logbook = Logbook::with(['magang.siswa', 'magang.dudi'])->find($id);
+
+            if (!$logbook) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Logbook tidak ditemukan'
+                ], 404);
+            }
+
+            // Validasi input
+            $request->validate([
+                'kegiatan' => 'required|string|min:10',
+                'kendala' => 'required|string|min:5',
+                'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB
+                'status_verifikasi' => 'nullable|in:pending,disetujui,ditolak',
+                'catatan_guru' => 'nullable|string',
+                'remove_file' => 'nullable|string',
+            ]);
+
+            // Prepare data untuk update
+            $updateData = [
+                'kegiatan' => $request->kegiatan,
+                'kendala' => $request->kendala,
+            ];
+
+            // Handle status verifikasi jika ada
+            if ($request->has('status_verifikasi')) {
+                $updateData['status_verifikasi'] = $request->status_verifikasi;
+            }
+
+            // Handle catatan guru jika ada
+            if ($request->has('catatan_guru')) {
+                $updateData['catatan_guru'] = $request->catatan_guru;
+            }
+
+            // Handle file removal
+            if ($request->remove_file == '1') {
+                if ($logbook->file && Storage::disk('public')->exists($logbook->file)) {
+                    Storage::disk('public')->delete($logbook->file);
+                }
+                $updateData['file'] = null;
+            }
+            // Handle file upload
+            else if ($request->hasFile('file')) {
+                // Delete old file if exists
+                if ($logbook->file && Storage::disk('public')->exists($logbook->file)) {
+                    Storage::disk('public')->delete($logbook->file);
+                }
+                // Store new file
+                $filePath = $request->file('file')->store('logbook_files', 'public');
+                $updateData['file'] = $filePath;
+            }
+
+            // Update logbook
+            $logbook->update($updateData);
+
+            // Reload relasi setelah update
+            $logbook->load(['magang.siswa', 'magang.dudi']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logbook berhasil diupdate',
+                'data' => $logbook
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate logbook',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Method verifikasi tetap ada untuk verifikasi saja (tanpa edit konten)
     public function verifikasi(Request $request, $id)
     {
         try {
@@ -182,57 +267,6 @@ class LogbookGuruController extends Controller
                 'success' => false,
                 'message' => 'Gagal memverifikasi logbook',
                 'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function update(Request $request, $id)
-    {
-        try {
-            // Cari logbook
-            $logbook = Logbook::find($id);
-
-            if (!$logbook) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Logbook tidak ditemukan'
-                ], 404);
-            }
-
-            // Validasi input
-            $request->validate([
-                'kegiatan' => 'required|string',
-                'kendala' => 'required|string',
-                'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            ]);
-
-            // Handle file upload
-            $filePath = $logbook->file;
-            if ($request->hasFile('file')) {
-                // Delete old file if exists
-                if ($logbook->file && Storage::exists($logbook->file)) {
-                    Storage::delete($logbook->file);
-                }
-
-                // Store new file
-                $filePath = $request->file('file')->store('logbook_files', 'public');
-            }
-
-            // Update logbook
-            $logbook->update([
-                'kegiatan' => $request->kegiatan,
-                'kendala' => $request->kendala,
-                'file' => $filePath,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Logbook berhasil diupdate'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate logbook'
             ], 500);
         }
     }

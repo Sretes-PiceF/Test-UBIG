@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Camera, Eye, Pencil, Trash2, Plus, AlertCircle } from "lucide-react";
 import { useLogbook, LogbookData } from '@/hooks/siswa/useLogbook';
 import { TambahLogbookModal } from './create/LogbookModal'; // Import modal
+import { LogbookUpdateModal } from './update/LogbookUpdate';
 
 // Props untuk komponen
 interface LogbookTableProps {
@@ -67,6 +68,8 @@ export function LogbookTable({
     const [entriesPerPage, setEntriesPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [showTambahModal, setShowTambahModal] = useState(false);
+    const [selectedLogbook, setSelectedLogbook] = useState<LogbookData | null>(null);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
 
     // Cek apakah siswa bisa menambah logbook (magang sedang berlangsung)
     const canAddLogbook = statusMagang === 'berlangsung';
@@ -110,6 +113,12 @@ export function LogbookTable({
         return () => clearTimeout(timer);
     }, [searchTerm, statusFilter]);
 
+    // Fungsi untuk menentukan apakah aksi (edit/hapus) harus ditampilkan
+    const shouldShowActions = (logbook: LogbookData): boolean => {
+        // Hanya tampilkan aksi jika status belum diverifikasi (pending)
+        return logbook.status_verifikasi === 'pending';
+    };
+
     // Handler untuk tombol aksi
     const handleViewDetail = (logbook: LogbookData) => {
         if (onViewDetail) {
@@ -119,25 +128,30 @@ export function LogbookTable({
         }
     };
 
-    const handleEdit = (logbook: LogbookData) => {
-        // Cek apakah magang masih berlangsung
-        if (!canAddLogbook) {
-            alert('Anda tidak dapat mengedit logbook karena magang sudah selesai atau belum dimulai');
-            return;
-        }
+    // Handler untuk edit logbook
+const handleEdit = (logbook: LogbookData) => {
+    // Cek apakah magang masih berlangsung
+    if (!canAddLogbook) {
+        alert('Anda tidak dapat mengedit logbook karena magang sudah selesai atau belum dimulai');
+        return;
+    }
 
-        // Cek apakah logbook masih bisa diedit (hanya yang pending)
-        if (logbook.status_verifikasi !== 'pending') {
-            alert('Logbook yang sudah diverifikasi tidak dapat diedit');
-            return;
-        }
+    // Cek apakah logbook masih bisa diedit (hanya yang pending)
+    if (logbook.status_verifikasi !== 'pending') {
+        alert('Logbook yang sudah diverifikasi tidak dapat diedit');
+        return;
+    }
 
-        if (onEdit) {
-            onEdit(logbook);
-        } else {
-            console.log('Edit:', logbook);
-        }
-    };
+    // Buka modal edit
+    setSelectedLogbook(logbook);
+    setShowUpdateModal(true);
+
+    // Call parent callback jika ada
+    if (onEdit) {
+        onEdit(logbook);
+    }
+};
+
 
     const handleDelete = async (logbook: LogbookData) => {
         // Cek apakah magang masih berlangsung
@@ -245,6 +259,18 @@ export function LogbookTable({
             </div>
         );
     }
+
+    // Handler setelah update berhasil
+const handleSuccessUpdate = () => {
+    console.log('Logbook berhasil diupdate');
+    // Refresh data
+    const backendStatus = statusFilter === 'Semua' ? 'all' : mapStatusToBackend(statusFilter);
+    fetchLogbooks(currentPage, entriesPerPage, searchTerm, backendStatus);
+    
+    // Tutup modal
+    setShowUpdateModal(false);
+    setSelectedLogbook(null);
+};
 
     return (
         <div className="space-y-4">
@@ -417,6 +443,7 @@ export function LogbookTable({
 
                                     {/* Aksi */}
                                     <div className="col-span-1 flex items-center justify-center gap-1">
+                                        {/* Tombol Lihat Detail - SELALU muncul untuk semua status */}
                                         <button
                                             onClick={() => handleViewDetail(log)}
                                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -425,8 +452,8 @@ export function LogbookTable({
                                             <Eye className="h-4 w-4" />
                                         </button>
                                         
-                                        {/* Tombol Edit - Hanya muncul jika magang berlangsung DAN status pending */}
-                                        {canAddLogbook && log.status_verifikasi === 'pending' && (
+                                        {/* Tombol Edit - Hanya muncul jika status pending DAN magang berlangsung */}
+                                        {shouldShowActions(log) && canAddLogbook && (
                                             <button
                                                 onClick={() => handleEdit(log)}
                                                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
@@ -436,8 +463,8 @@ export function LogbookTable({
                                             </button>
                                         )}
                                         
-                                        {/* Tombol Hapus - Hanya muncul jika magang berlangsung DAN status pending */}
-                                        {canAddLogbook && log.status_verifikasi === 'pending' && (
+                                        {/* Tombol Hapus - Hanya muncul jika status pending DAN magang berlangsung */}
+                                        {shouldShowActions(log) && canAddLogbook && (
                                             <button
                                                 onClick={() => handleDelete(log)}
                                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -445,6 +472,11 @@ export function LogbookTable({
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
+                                        )}
+
+                                        {/* Pesan jika tidak ada aksi yang tersedia */}
+                                        {!shouldShowActions(log) && (
+                                            <span className="text-xs text-gray-400 italic">Tidak ada aksi</span>
                                         )}
                                     </div>
                                 </div>
@@ -491,7 +523,15 @@ export function LogbookTable({
                     </div>
                 )}
             </div>
-
+<LogbookUpdateModal
+    isOpen={showUpdateModal}
+    onClose={() => {
+        setShowUpdateModal(false);
+        setSelectedLogbook(null);
+    }}
+    onSuccess={handleSuccessUpdate}
+    logbook={selectedLogbook}
+/>
             {/* Modal Tambah Logbook */}
             <TambahLogbookModal
                 open={showTambahModal}

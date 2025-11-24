@@ -38,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/logbook', [LogbookSiswaController::class, 'index']);
             Route::get('/logbook/id', [LogbookSiswaController::class, 'show']);
             Route::post('/logbook/create', [LogbookSiswaController::class, 'store']);
-            Route::patch('/logbook/update/{id}', [LogbookSiswaController::class, 'update']);
+            Route::post('/logbook/update/{id}', [LogbookSiswaController::class, 'update']);
             Route::delete('/logbook/delete/{id}', [LogbookSiswaController::class, 'destroy']);
 
             //Route DUdi
@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/guru/logbook', [LogbookGuruController::class, 'getAllLogbook']);
         Route::get('/logbook', [LogbookGuruController::class, 'index']);
         Route::get('/logbook/{id}', [LogbookGuruController::class, 'show']);
-        Route::patch('/logbook/update/{id}', [LogbookGuruController::class, 'update']);
+        Route::post('/logbook/update/{id}', [LogbookGuruController::class, 'update']);
         Route::delete('/logbook/delete/{id}', [LogbookGuruController::class, 'destroy']);
         // Verifikasi logbook
         Route::put('/logbook/{id}/verifikasi', [LogbookGuruController::class, 'verifikasi']);

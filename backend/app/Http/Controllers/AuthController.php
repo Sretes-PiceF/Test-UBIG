@@ -167,7 +167,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => 'Invalid credentials'
+            'message' => 'Mohon check email dan password anda!'
         ], 401);
     }
 

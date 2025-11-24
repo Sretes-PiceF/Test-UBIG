@@ -9,6 +9,7 @@ export interface LogbookData {
     kegiatan: string;
     kendala: string;
     file: string | null;
+    file_url: string | null
     status_verifikasi: 'pending' | 'disetujui' | 'ditolak';
     catatan_guru: string | null;
     catatan_dudi: string | null;
@@ -318,7 +319,9 @@ export const useLogbook = () => {
                 formData.append('file', logbookData.file);
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/siswa/logbook/update/${id}`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+            const response = await fetch(`${baseUrl}/api/logbook/update/${id}`, {
                 method: 'PATCH',
                 headers: getHeaders('multipart/form-data'),
                 body: formData,

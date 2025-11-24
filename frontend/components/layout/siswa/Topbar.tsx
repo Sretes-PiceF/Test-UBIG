@@ -53,7 +53,7 @@ export function TopbarSiswa() {
                 <div className="flex items-center gap-3">
                     <div className="text-right leading-tight">
                         <p className="font-semibold text-sm text-gray-800">Memuat...</p>
-                        <p className="text-xs text-gray-500 -mt-0.5">Guru Pembimbing</p>
+                        <p className="text-xs text-gray-500 -mt-0.5">Memuat...</p>
                     </div>
                     <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                         <User className="h-5 w-5 text-gray-600" />

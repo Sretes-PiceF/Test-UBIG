@@ -310,8 +310,7 @@ class LogbookSiswaController extends Controller
             // Cari logbook milik siswa
             $logbook = Logbook::whereHas('magang', function ($query) use ($siswa) {
                 $query->where('siswa_id', $siswa->id);
-            })
-                ->findOrFail($id);
+            })->findOrFail($id);
 
             // Cek apakah logbook masih bisa diedit (hanya yang pending)
             if ($logbook->status_verifikasi !== 'pending') {
@@ -321,12 +320,20 @@ class LogbookSiswaController extends Controller
                 ], 403);
             }
 
-            // Validasi input
+            // ✅ PERBAIKAN: Semua field OPTIONAL untuk update
             $validator = Validator::make($request->all(), [
-                'tanggal' => 'required|date|before_or_equal:today',
-                'kegiatan' => 'required|string|min:10',
-                'kendala' => 'required|string|min:5',
+                'tanggal' => 'nullable|date|before_or_equal:today',
+                'kegiatan' => 'nullable|string|min:10',
+                'kendala' => 'nullable|string|min:5',
                 'file' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            ], [
+                'tanggal.date' => 'Format tanggal tidak valid',
+                'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini',
+                'kegiatan.min' => 'Kegiatan minimal 10 karakter',
+                'kendala.min' => 'Kendala minimal 5 karakter',
+                'file.image' => 'File harus berupa gambar',
+                'file.mimes' => 'File harus berformat JPEG, JPG, atau PNG',
+                'file.max' => 'Ukuran file maksimal 2MB',
             ]);
 
             if ($validator->fails()) {
@@ -337,8 +344,22 @@ class LogbookSiswaController extends Controller
                 ], 422);
             }
 
+            // ✅ PERBAIKAN: Hanya update field yang dikirim
+            $updateData = [];
+
+            if ($request->has('tanggal')) {
+                $updateData['tanggal'] = $request->tanggal;
+            }
+
+            if ($request->has('kegiatan')) {
+                $updateData['kegiatan'] = trim($request->kegiatan);
+            }
+
+            if ($request->has('kendala')) {
+                $updateData['kendala'] = trim($request->kendala);
+            }
+
             // Handle upload file baru
-            $filePath = $logbook->file;
             if ($request->hasFile('file')) {
                 // Hapus file lama jika ada
                 if ($logbook->file && Storage::disk('public')->exists($logbook->file)) {
@@ -348,26 +369,32 @@ class LogbookSiswaController extends Controller
                 $file = $request->file('file');
                 $fileName = 'logbook_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $filePath = $file->storeAs('logbook', $fileName, 'public');
+                $updateData['file'] = $filePath;
             }
 
-            // Update logbook
-            $logbook->update([
-                'tanggal' => $request->tanggal,
-                'kegiatan' => $request->kegiatan,
-                'kendala' => $request->kendala,
-                'file' => $filePath,
-            ]);
+            // Update hanya field yang ada
+            if (!empty($updateData)) {
+                $logbook->update($updateData);
+            }
+
+            // Reload dengan relasi
+            $logbook->load('magang.siswa.user', 'magang.dudi');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Logbook berhasil diupdate',
                 'data' => $logbook
-            ]);
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Logbook tidak ditemukan'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengupdate logbook',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
